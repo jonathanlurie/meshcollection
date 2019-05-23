@@ -1,0 +1,67 @@
+{
+  "name": "meshcollection",
+  "version": "0.1.0",
+  "description": "Manage a collection of meshes",
+  "repository": "jonathanlurie/meshcollection",
+  "main": "lib/meshcollection.js",
+  "module": "es/meshcollection.js",
+  "unpkg": "dist/meshcollection.js",
+  "entry": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "NODE_ENV=production rollup -c",
+    "dev": "serve -l 1234 . & NODE_ENV=development rollup -w -c",
+    "doc": "documentation build src/index.js -o ./doc/ -f html; documentation build src/** -f md > documentation.md",
+    "lint": "eslint src"
+  },
+  "author": "Jonathan Lurie",
+  "license": "MIT",
+  "peerDependencies": {
+    "threecontext": "^0.1.0"
+  },
+  "devDependencies": {
+    "documentation": "^8.1.2",
+    "eslint": "^5.6.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "rollup": "^1.12.3",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^5.0.0",
+    "rollup-plugin-terser": "^2.0.2",
+    "rollup-plugin-webworkify": "0.0.4",
+    "serve": "^11.0.0"
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-airbnb-base",
+    "rules": {
+      "semi": [
+        "error",
+        "never"
+      ],
+      "no-underscore-dangle": [
+        "off",
+        {
+          "allowAfterThis": true
+        }
+      ],
+      "max-len": [
+        "warn",
+        {
+          "code": 150
+        }
+      ],
+      "prefer-destructuring": [
+        "off"
+      ],
+      "no-param-reassign": [
+        "warn"
+      ]
+    }
+  },
+  "dependencies": {
+    "@jonathanlurie/eventmanager": "^0.1.0",
+    "three": "^0.104.0"
+  }
+}
