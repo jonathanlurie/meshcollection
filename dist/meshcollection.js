@@ -48611,7 +48611,7 @@
 	            let geometry = new BufferGeometry();
 	            geometry.setIndex( new BufferAttribute( messageData.indices, 1 ) );
 	            geometry.addAttribute( 'position', new BufferAttribute( messageData.positions, messageData.verticesPerPolygon ) );
-	            // geometry.computeBoundingSphere()
+	            geometry.computeBoundingSphere();
 	            geometry.computeVertexNormals();
 	            cbDone({
 	              error: null,
@@ -48659,13 +48659,28 @@
 	 */
 	class MeshCollection extends EventManager {
 
-	  constructor(threeContext){
+	  constructor(threeContext=null){
 	    super();
 	    this._threeContext = threeContext;
+
 	    this._container = new Object3D();
 	    this._container.name = 'meshContainer';
 	    this._threeContext.getScene().add(this._container);
 	    this._collection = {};
+
+	    // let sphereGeom = new THREE.SphereBufferGeometry( 10, 32, 32 );
+	    // let sphereMat = new THREE.MeshBasicMaterial( {color: 0xff00ff} );
+	    // let sphereMesh = new THREE.Mesh( sphereGeom, sphereMat );
+	    // this._threeContext.getScene().add(sphereMesh)
+	    // this._threeContext.addSampleShape()
+
+	    // const geometry = new THREE.TorusKnotBufferGeometry(10, 3, 100, 16)
+	    // const material = new THREE.MeshPhongMaterial({ color: Math.ceil(Math.random() * 0xffff00) })
+	    // const torusKnot = new THREE.Mesh(geometry, material)
+	    // this._threeContext.getScene().add(torusKnot)
+
+	    // let axesHelper = new THREE.AxesHelper(100)
+	    // this._threeContext.getScene().add(axesHelper)
 	  }
 
 
@@ -48739,6 +48754,7 @@
 	   * @param {string} options.id - the id to attribute to the mesh once it will be part of the collection. Automatically generated if not provided
 	   * @param {boolean} options.makeVisible - if true, the mesh will be added and made visible once loaded. If false, it's just going to be parsed and will have to be added later using its id (default: true)
 	   * @param {string} options.color - the color to apply to the mesh in the format '#FFFFFF' (default: '#FFFFFF', does not apply if a material is given)
+	   * @param {boolean} options.focusOn - once loaded, the camera will look at it
 	   * @param {THREE.Material} options.material - the material to apply to this mesh (default: a generated Fresnel material)
 	   */
 	  loadMeshFromUrl(url, options = {}){
@@ -48748,6 +48764,7 @@
 	    let color = 'color' in options ? options.color : '#FFFFFF';
 	    let material = 'material' in options ? options.material : this._generateFresnelMateral(color);
 	    let format = 'format' in options ? options.format : 'obj';
+	    let focusOn = 'focusOn' in options ? options.focusOn : false;
 
 	    MeshParser.parseFromUrl(url, format,
 	      // cbDone,
@@ -48758,10 +48775,20 @@
 
 	        let geometry = info.geometry;
 	        let mesh = new Mesh(geometry, material);
+
+	        // let geometry = new THREE.SphereBufferGeometry( 10, 32, 32 );
+	        // let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+	        // let mesh = new THREE.Mesh( geometry, material );
+
 	        mesh.name = id;
 	        mesh.visible = makeVisible;
 	        that._collection[id] = mesh;
-	        that._container.add(mesh);
+	        // that._container.add(mesh)
+	        that._threeContext.getScene().add(mesh);
+
+	        if(focusOn){
+	          that._threeContext.lookAt(geometry.boundingSphere.center);
+	        }
 
 	        that.emit('onMeshLoaded', [mesh, id]);
 	      },
@@ -48771,6 +48798,46 @@
 	        that.emit('onMeshLoadingProgress', [id, info.step, info.progress]);
 	      });
 	  }
+
+
+	  /**
+	   * Is a mesh with such id in the collection?
+	   * @return {boolean} true if present in collection, false if not
+	   */
+	  has(id){
+	    return (id in this._collection)
+	  }
+
+
+	  /**
+	   * Show the mesh that has such id
+	   */
+	  show(id){
+	    if(id in this._collection){
+	      this._collection[id].visible = true;
+	    }
+	  }
+
+
+	  /**
+	   * Hide the mesh that has such id
+	   */
+	  hide(id){
+	    if(id in this._collection){
+	      this._collection[id].visible = false;
+	    }
+	  }
+
+
+	  detach(id){
+	    if(id in this._collection){
+	      // this._container
+	      let mesh = this._collection[id];
+	      this._container.remove(mesh);
+	    }
+	  }
+
+
 
 	}
 

@@ -17,7 +17,9 @@
   </style>
 </head>
 <body>
-  <script src="https://unpkg.com/threecontext@0.1.0/dist/threecontext.js"></script>
+  <!-- <script src="https://unpkg.com/threecontext@0.1.0/dist/threecontext.js"></script> -->
+  <!-- <script src="http://localhost:7654/dist/threecontext.js"></script> -->
+
 
   <div id="threedeediv" class="card"></div>
 
@@ -32,47 +34,47 @@
   <p>Open Javascript console.</p>
 
   <script>
-      let threedeediv = document.getElementById('threedeediv')
-
-      // The option object, you don't have to provide this one
-      let options = {
-        webgl2: true,            // enable WebGL2 if `true` (default: false)
-        embedLight: false,       // embeds the light into the camera if true (default: false)
-        antialias: false,        // enables antialias if true (default: true)
-        showAxisHelper: true,    // shows the axis helper at (0, 0, 0) when true (default: false)
-        axisHelperSize: 100,     // length of the the 3 axes of the helper (default: 100)
-        controlType: 'orbit',    // 'orbit': locked poles or 'trackball': free rotations (default: 'trackball')
-        cameraPosition: {x: 0, y:0, z: 1000}, // inits position of the camera (default: {x: 0, y: 0, z: 100})
-        cameraLookAt: {x: 0, y: 0, z: 0},     // inits position to look at (default: {x: 0, y: 0, z: 0})
-        raycastOnDoubleClick: true,           // performs a raycast when double clicking (default: `true`).
-                                              // If some object from the scene are raycasted, the event 'raycast'
-                                              // is emitted with the list of intersected object from the scene as argument.
-      }
+      // let threedeediv = document.getElementById('threedeediv')
+      //
+      // // The option object, you don't have to provide this one
+      // let options = {
+      //   webgl2: true,            // enable WebGL2 if `true` (default: false)
+      //   embedLight: false,       // embeds the light into the camera if true (default: false)
+      //   antialias: false,        // enables antialias if true (default: true)
+      //   showAxisHelper: true,    // shows the axis helper at (0, 0, 0) when true (default: false)
+      //   axisHelperSize: 100,     // length of the the 3 axes of the helper (default: 100)
+      //   controlType: 'orbit',    // 'orbit': locked poles or 'trackball': free rotations (default: 'trackball')
+      //   cameraPosition: {x: 0, y:0, z: 1000}, // inits position of the camera (default: {x: 0, y: 0, z: 100})
+      //   cameraLookAt: {x: 0, y: 0, z: 0},     // inits position to look at (default: {x: 0, y: 0, z: 0})
+      //   raycastOnDoubleClick: true,           // performs a raycast when double clicking (default: `true`).
+      //                                         // If some object from the scene are raycasted, the event 'raycast'
+      //                                         // is emitted with the list of intersected object from the scene as argument.
+      // }
 
       // Instanciating the context
-      let myThreeCtx = new threecontext(threedeediv, options)
+      // let myThreeCtx = new threecontext(threedeediv, options)
 
       // Optionally, you can show a torus knot, simply to make sure your context is properly setup
-      myThreeCtx.addSampleShape()
+      // myThreeCtx.addSampleShape()
 
-      let mc = new meshcollection(myThreeCtx)
+      let mc = new meshcollection(/*myThreeCtx*/)
 
-      mc.on('onMeshLoaded', function(mesh, id){
-        console.log(mesh, id)
-      })
+      // mc.on('onMeshLoaded', function(mesh, id){
+      //   console.log(mesh, id)
+      // })
+      //
+      // mc.on('onMeshLoadingProgress', function(id, step, progress){
+      //   console.log(id, step, progress)
+      // })
+      //
+      // mc.on('onMeshLoadError', function(error, id){
+      //   console.log(error, id)
+      // })
 
-      mc.on('onMeshLoadingProgress', function(id, step, progress){
-        console.log(id, step, progress)
-      })
 
-      mc.on('onMeshLoadError', function(error, id){
-        console.log(error, id)
-      })
-
-
-      mc.loadMeshFromUrl(
-        'http://127.0.0.1:8082/allen_region_obj/997.obj'
-      )
+      // mc.loadMeshFromUrl(
+      //   'http://127.0.0.1:8080/allen_region_obj/997.obj'
+      // )
 
   </script>
 

@@ -28,7 +28,7 @@ class MeshParser {
             let geometry = new THREE.BufferGeometry()
             geometry.setIndex( new THREE.BufferAttribute( messageData.indices, 1 ) )
             geometry.addAttribute( 'position', new THREE.BufferAttribute( messageData.positions, messageData.verticesPerPolygon ) )
-            // geometry.computeBoundingSphere()
+            geometry.computeBoundingSphere()
             geometry.computeVertexNormals()
             cbDone({
               error: null,
