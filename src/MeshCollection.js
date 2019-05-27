@@ -40,6 +40,7 @@ class MeshCollection extends EventManager {
     // const torusKnot = new THREE.Mesh(geometry, material)
     // this._threeContext.getScene().add(torusKnot)
 
+    // // DEBUG
     // let axesHelper = new THREE.AxesHelper(100)
     // this._threeContext.getScene().add(axesHelper)
   }
@@ -148,8 +149,15 @@ class MeshCollection extends EventManager {
         that._threeContext.getScene().add(mesh)
 
         if(focusOn){
+          let lookatPos = geometry.boundingSphere.center
+          that._threeContext.getCamera().position.set(lookatPos.x + geometry.boundingSphere.radius * 4, lookatPos.y, lookatPos.z)
           that._threeContext.lookAt(geometry.boundingSphere.center)
         }
+
+        // DEBUG
+        // let axesHelper = new THREE.AxesHelper(1000)
+        // axesHelper.position.set(geometry.boundingSphere.center.x, geometry.boundingSphere.center.y, geometry.boundingSphere.center.z)
+        // that._threeContext.getScene().add(axesHelper)
 
         that.emit('onMeshLoaded', [mesh, id])
       },
@@ -190,6 +198,9 @@ class MeshCollection extends EventManager {
   }
 
 
+  /**
+   * NOT WORKING FOR NOW
+   */
   detach(id){
     if(id in this._collection){
       // this._container
@@ -197,8 +208,6 @@ class MeshCollection extends EventManager {
       this._container.remove(mesh)
     }
   }
-
-
 
 }
 

@@ -48281,7 +48281,6 @@
 	  }
 
 	}
-	//# sourceMappingURL=eventmanager.js.map
 
 	/*! rollup-plugin-webworkify/workerhelper.js v0.0.4 | MIT Licensed | Allex Wang <allex.wxn@gmail.com> */
 	var win = window, BlobBuilder = win.BlobBuilder || win.WebKitBlobBuilder || win.MozBlobBuilder || win.MSBlobBuilder, URL = win.URL || win.webkitURL || win.mozURL || win.msURL, SCRIPT_TYPE = "application/javascript", TARGET = "undefined" == typeof Symbol ? "__t" + +new Date() : Symbol(), Worker = win.Worker, nextTick = win.setImmediate || function(e) {
@@ -48679,6 +48678,7 @@
 	    // const torusKnot = new THREE.Mesh(geometry, material)
 	    // this._threeContext.getScene().add(torusKnot)
 
+	    // // DEBUG
 	    // let axesHelper = new THREE.AxesHelper(100)
 	    // this._threeContext.getScene().add(axesHelper)
 	  }
@@ -48787,8 +48787,15 @@
 	        that._threeContext.getScene().add(mesh);
 
 	        if(focusOn){
+	          let lookatPos = geometry.boundingSphere.center;
+	          that._threeContext.getCamera().position.set(lookatPos.x + geometry.boundingSphere.radius * 4, lookatPos.y, lookatPos.z);
 	          that._threeContext.lookAt(geometry.boundingSphere.center);
 	        }
+
+	        // DEBUG
+	        // let axesHelper = new THREE.AxesHelper(1000)
+	        // axesHelper.position.set(geometry.boundingSphere.center.x, geometry.boundingSphere.center.y, geometry.boundingSphere.center.z)
+	        // that._threeContext.getScene().add(axesHelper)
 
 	        that.emit('onMeshLoaded', [mesh, id]);
 	      },
@@ -48829,6 +48836,9 @@
 	  }
 
 
+	  /**
+	   * NOT WORKING FOR NOW
+	   */
 	  detach(id){
 	    if(id in this._collection){
 	      // this._container
@@ -48836,8 +48846,6 @@
 	      this._container.remove(mesh);
 	    }
 	  }
-
-
 
 	}
 
