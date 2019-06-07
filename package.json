@@ -1,6 +1,6 @@
 {
   "name": "meshcollection",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Manage a collection of meshes",
   "repository": "jonathanlurie/meshcollection",
   "main": "lib/meshcollection.js",

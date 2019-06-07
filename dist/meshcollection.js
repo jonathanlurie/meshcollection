@@ -48281,6 +48281,7 @@
 	  }
 
 	}
+	//# sourceMappingURL=eventmanager.js.map
 
 	/*! rollup-plugin-webworkify/workerhelper.js v0.0.4 | MIT Licensed | Allex Wang <allex.wxn@gmail.com> */
 	var win = window, BlobBuilder = win.BlobBuilder || win.WebKitBlobBuilder || win.MozBlobBuilder || win.MSBlobBuilder, URL = win.URL || win.webkitURL || win.mozURL || win.msURL, SCRIPT_TYPE = "application/javascript", TARGET = "undefined" == typeof Symbol ? "__t" + +new Date() : Symbol(), Worker = win.Worker, nextTick = win.setImmediate || function(e) {
@@ -48783,8 +48784,8 @@
 	        mesh.name = id;
 	        mesh.visible = makeVisible;
 	        that._collection[id] = mesh;
-	        // that._container.add(mesh)
-	        that._threeContext.getScene().add(mesh);
+	        that._container.add(mesh);
+	        // that._threeContext.getScene().add(mesh)
 
 	        if(focusOn){
 	          let lookatPos = geometry.boundingSphere.center;
@@ -48793,8 +48794,8 @@
 	        }
 
 	        // DEBUG
-	        // let axesHelper = new THREE.AxesHelper(1000)
-	        // axesHelper.position.set(geometry.boundingSphere.center.x, geometry.boundingSphere.center.y, geometry.boundingSphere.center.z)
+	        // let axesHelper = new THREE.AxesHelper(100)
+	        // // axesHelper.position.set(geometry.boundingSphere.center.x, geometry.boundingSphere.center.y, geometry.boundingSphere.center.z)
 	        // that._threeContext.getScene().add(axesHelper)
 
 	        that.emit('onMeshLoaded', [mesh, id]);
@@ -48846,6 +48847,86 @@
 	      this._container.remove(mesh);
 	    }
 	  }
+
+
+
+	  /**
+	   *
+	   * TEST
+	   */
+	  addPointCloud(){
+	    // https://github.com/mrdoob/three.js/blob/master/examples/webgl_points_sprites.html
+
+	    let axesHelper = new AxesHelper(100);
+	    // axesHelper.position.set(geometry.boundingSphere.center.x, geometry.boundingSphere.center.y, geometry.boundingSphere.center.z)
+	    this._threeContext.getScene().add(axesHelper);
+
+	    let geometry = new BufferGeometry();
+	    let vertices = [];
+	    // let textureLoader = new THREE.TextureLoader();
+
+	    for ( let i = 0; i < 100; i ++ ) {
+	      let x = Math.random() * 20 - 10;
+	      let y = Math.random() * 20 - 10;
+	      let z = Math.random() * 20 - 10;
+	      vertices.push( x, y, z );
+	    }
+
+	    geometry.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+
+
+	    let shader = {
+	      vertex: `
+      uniform float size;
+
+      void main() {
+        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+        gl_PointSize = size * ( 150.0 / -mvPosition.z );
+        gl_Position = projectionMatrix * mvPosition;
+      }`,
+
+	      fragment: `
+
+      void main() {
+        vec2 uv = vec2( gl_PointCoord.x -0.5, 1.0 - gl_PointCoord.y-0.5 );
+        float dFromCenter = sqrt(uv.x*uv.x + uv.y*uv.y);
+        float alpha = 1.0;
+        float blurStart = 0.3;
+
+        if(dFromCenter > 0.5){
+          discard;
+        }else if(dFromCenter > blurStart) {
+          alpha = 1.0 - (dFromCenter - blurStart) / (0.5-blurStart);
+          vec4 tex = vec4(1.0, 0.0, 0.0, alpha);
+          gl_FragColor = tex;
+        } else {
+          vec4 tex = vec4(1.0, 0.0, 0.0, 1.0);
+          gl_FragColor = tex;
+        }
+      }`
+	    };
+
+	    let uniforms = {
+	      size: { value: 10.},
+	    };
+
+	    // material
+	    var material = new ShaderMaterial( {
+	      uniforms:       uniforms,
+	      vertexShader:   shader.vertex,
+	      fragmentShader: shader.fragment,
+	      transparent:    true,
+	      blending: AdditiveBlending,
+	    });
+
+	    let particles = new Points( geometry, material );
+
+	    this._collection['someparticle'] = particles;
+	    this._container.add(particles);
+	  }
+
+
+
 
 	}
 
