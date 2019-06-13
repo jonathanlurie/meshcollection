@@ -48641,6 +48641,54 @@
 
 	}
 
+	// import RawPointsParserWorker from 'worker#./workers/RawPointsParser.worker.js'
+
+	const POINT_FORMAT_LOOKUP = {
+	  raw: "parseRaw"
+	};
+
+	class PointCloudParser {
+
+	  static parseRawFromUrl(url, cbDone, cbProgress){
+	    fetch(url)
+	      .then(function(response) {
+	        if(response.ok === false){
+	          throw new Error(`No file at ${url}`)
+	        }
+	        return response.blob()
+	      })
+	      .then(function(pointBlob){
+	        return new Response(pointBlob).arrayBuffer()
+	      })
+	      .then(function(pointBuffer) {
+	        console.time('points');
+	        let geometry = new BufferGeometry();
+	        geometry.addAttribute( 'position', new Float32BufferAttribute( new Float32Array(pointBuffer), 3 ) );
+	        console.timeEnd('points');
+
+	        cbDone({
+	          error: null,
+	          geometry: geometry
+	        });
+	      })
+	      .catch( e => {
+	        cbDone({
+	          error: e,
+	          geometry: null
+	        });
+	      });
+
+
+	  }
+
+
+
+	  static parseFromUrl(url, format, cbDone, cbProgress){
+	    PointCloudParser[POINT_FORMAT_LOOKUP[format] + 'FromUrl'](url, cbDone, cbProgress);
+	  }
+
+	}
+
 	/**
 	 * Events expected:
 	 *
@@ -48850,11 +48898,74 @@
 
 
 
+
+
+	  /**
+	   * Load a mesh file from a distant file, with the provided url.
+	   * @param {string} url - the url to load the file from
+	   * @param {object} options - the options object
+	   * @param {number} options.size - size of each point (default: 100, as the space unit is probably going to be micron)
+	   * @param {string} options.format - must be one of: 'raw' (no others for the moment :D )
+	   * @param {string} options.id - the id to attribute to the mesh once it will be part of the collection. Automatically generated if not provided
+	   * @param {boolean} options.makeVisible - if true, the mesh will be added and made visible once loaded. If false, it's just going to be parsed and will have to be added later using its id (default: true)
+	   * @param {string} options.color - the color to apply to the mesh in the format '#FFFFFF' (default: '#FFFFFF', does not apply if a material is given)
+	   * @param {boolean} options.focusOn - once loaded, the camera will look at it
+	   */
+	  loadPointCloudFromUrl(url, options = {}){
+	    let that = this;
+	    let id = 'id' in options ? options.id : Math.random().toString().split('.')[1];
+	    let makeVisible = 'makeVisible' in options ? options.makeVisible : true;
+	    let color = 'color' in options ? options.color : '#FFFFFF';
+	    let format = 'format' in options ? options.format : 'raw';
+	    let focusOn = 'focusOn' in options ? options.focusOn : false;
+	    let size = 'size' in options ? options.size : 100;
+
+	    PointCloudParser.parseFromUrl(url, format,
+	      // cbDone,
+	      function(info){
+	        if(info.error){
+	          return that.emit('onMeshLoadError', [info.error, id])
+	        }
+
+	        let material = that._generatePointCloudMaterial(color, size);
+	        let geometry = info.geometry;
+	        let particles = new Points( geometry, material );
+
+	        particles.name = id;
+	        particles.visible = makeVisible;
+	        that._collection[id] = particles;
+	        that._container.add(particles);
+	        // that._threeContext.getScene().add(particles)
+
+	        if(focusOn){
+	          let lookatPos = geometry.boundingSphere.center;
+	          that._threeContext.getCamera().position.set(lookatPos.x + geometry.boundingSphere.radius * 4, lookatPos.y, lookatPos.z);
+	          that._threeContext.lookAt(geometry.boundingSphere.center);
+	        }
+
+	        // DEBUG
+	        // let axesHelper = new THREE.AxesHelper(100)
+	        // // axesHelper.position.set(geometry.boundingSphere.center.x, geometry.boundingSphere.center.y, geometry.boundingSphere.center.z)
+	        // that._threeContext.getScene().add(axesHelper)
+
+	        that.emit('onMeshLoaded', [particles, id]);
+	      },
+
+	      // cbProgress
+	      function(info){
+	        that.emit('onMeshLoadingProgress', [id, info.step, info.progress]);
+	      });
+	  }
+
+
+
+
+
 	  /**
 	   *
 	   * TEST
 	   */
-	  addPointCloud(){
+	  addPointCloud(nbPoints=1000, color){
 	    // https://github.com/mrdoob/three.js/blob/master/examples/webgl_points_sprites.html
 
 	    let axesHelper = new AxesHelper(100);
@@ -48865,10 +48976,17 @@
 	    let vertices = [];
 	    // let textureLoader = new THREE.TextureLoader();
 
-	    for ( let i = 0; i < 100; i ++ ) {
-	      let x = Math.random() * 20 - 10;
-	      let y = Math.random() * 20 - 10;
-	      let z = Math.random() * 20 - 10;
+	    // for ( let i = 0; i < 10000; i ++ ) {
+	    //   let x = Math.random() * 20 - 10;
+	    //   let y = Math.random() * 20 - 10;
+	    //   let z = Math.random() * 20 - 10;
+	    //   vertices.push( x, y, z )
+	    // }
+
+	    for ( let i = 0; i < nbPoints; i ++ ) {
+	      let x = Math.random() * 10000;
+	      let y = Math.random() * 10000;
+	      let z = Math.random() * 10000;
 	      vertices.push( x, y, z );
 	    }
 
@@ -48886,28 +49004,39 @@
       }`,
 
 	      fragment: `
+      uniform vec3 color;
 
       void main() {
         vec2 uv = vec2( gl_PointCoord.x -0.5, 1.0 - gl_PointCoord.y-0.5 );
         float dFromCenter = sqrt(uv.x*uv.x + uv.y*uv.y);
-        float alpha = 1.0;
+        float alpha = .7;
         float blurStart = 0.3;
 
+        // without blurry edges
         if(dFromCenter > 0.5){
           discard;
-        }else if(dFromCenter > blurStart) {
-          alpha = 1.0 - (dFromCenter - blurStart) / (0.5-blurStart);
-          vec4 tex = vec4(1.0, 0.0, 0.0, alpha);
-          gl_FragColor = tex;
-        } else {
-          vec4 tex = vec4(1.0, 0.0, 0.0, 1.0);
+        }else {
+          vec4 tex = vec4(color, alpha);
           gl_FragColor = tex;
         }
+
+        // with blurry edges
+        // if(dFromCenter > 0.5){
+        //   discard;
+        // }else if(dFromCenter > blurStart) {
+        //   alpha = alpha - (dFromCenter - blurStart) / (0.5-blurStart);
+        //   vec4 tex = vec4(1.0, 0.0, 0.0, alpha);
+        //   gl_FragColor = tex;
+        // } else {
+        //   vec4 tex = vec4(1.0, 0.0, 0.0, alpha);
+        //   gl_FragColor = tex;
+        // }
       }`
 	    };
 
 	    let uniforms = {
-	      size: { value: 10.},
+	      size: { value: 100.},
+	      color: { type: "c", value: new Color(color) },
 	    };
 
 	    // material
@@ -48917,6 +49046,7 @@
 	      fragmentShader: shader.fragment,
 	      transparent:    true,
 	      blending: AdditiveBlending,
+	      //depthTest: false,
 	    });
 
 	    let particles = new Points( geometry, material );
@@ -48926,6 +49056,65 @@
 	  }
 
 
+	  _generatePointCloudMaterial(color='#FFFFFF', pointSize=100){
+	    let shader = {
+	      vertex: `
+      uniform float size;
+
+      void main() {
+        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+        gl_PointSize = size * ( 150.0 / -mvPosition.z );
+        gl_Position = projectionMatrix * mvPosition;
+      }`,
+
+	      fragment: `
+      uniform vec3 color;
+
+      void main() {
+        vec2 uv = vec2( gl_PointCoord.x -0.5, 1.0 - gl_PointCoord.y-0.5 );
+        float dFromCenter = sqrt(uv.x*uv.x + uv.y*uv.y);
+        float alpha = .7;
+        float blurStart = 0.3;
+
+        // without blurry edges
+        if(dFromCenter > 0.5){
+          discard;
+        }else {
+          vec4 tex = vec4(color, alpha);
+          gl_FragColor = tex;
+        }
+
+        // with blurry edges
+        // if(dFromCenter > 0.5){
+        //   discard;
+        // }else if(dFromCenter > blurStart) {
+        //   alpha = alpha - (dFromCenter - blurStart) / (0.5-blurStart);
+        //   vec4 tex = vec4(1.0, 0.0, 0.0, alpha);
+        //   gl_FragColor = tex;
+        // } else {
+        //   vec4 tex = vec4(1.0, 0.0, 0.0, alpha);
+        //   gl_FragColor = tex;
+        // }
+      }`
+	    };
+
+	    let uniforms = {
+	      size: { value: pointSize},
+	      color: { type: "c", value: new Color(color) },
+	    };
+
+	    // material
+	    var material = new ShaderMaterial( {
+	      uniforms:       uniforms,
+	      vertexShader:   shader.vertex,
+	      fragmentShader: shader.fragment,
+	      transparent:    true,
+	      blending: AdditiveBlending,
+	      //depthTest: false, // default: true
+	    });
+
+	    return material
+	  }
 
 
 	}
