@@ -18,6 +18,12 @@ import PointCloudParser from './PointCloudParser'
  * - 'onMeshLoadError': whenever a mesh could not be loaded, for various reasons. Args of the callbac:
  *    @param {Error} error - the error explaining what was wrong
  *    @param {string} id - id of the element that could not be loaded
+ *
+ * - 'onMeshLoadWarning': when mesh is asked to be loaded but it's already being processed or in the loaded.
+ *    Note that this is based on the ID, not the URL
+ *    @param {string} message - the explanation
+ *    @param {string} id - ID of the mesh being loaded
+ *
  */
 class MeshCollection extends EventManager {
 
@@ -29,6 +35,10 @@ class MeshCollection extends EventManager {
     this._container.name = 'meshContainer'
     this._threeContext.getScene().add(this._container)
     this._collection = {}
+
+    // keeps track of all the meshes that are in the process of being loaded/parsed.
+    // This is to prevent reloading of multiple time the same mesh
+    this._inProcess = {}
 
     // let sphereGeom = new THREE.SphereBufferGeometry( 10, 32, 32 );
     // let sphereMat = new THREE.MeshBasicMaterial( {color: 0xff00ff} );
@@ -123,11 +133,23 @@ class MeshCollection extends EventManager {
   loadMeshFromUrl(url, options = {}){
     let that = this
     let id = 'id' in options ? options.id : Math.random().toString().split('.')[1]
+
+    if(id in this._inProcess){
+      return this.emit('onMeshLoadWarning', ['The mesh is already being processed.', id])
+    }
+
+    if(id in this._collection){
+      return this.emit('onMeshLoadWarning', ['The mesh is already loaded.', id])
+    }
+
     let makeVisible = 'makeVisible' in options ? options.makeVisible : true
     let color = 'color' in options ? options.color : '#FFFFFF'
     let material = 'material' in options ? options.material : this._generateFresnelMateral(color)
     let format = 'format' in options ? options.format : 'obj'
     let focusOn = 'focusOn' in options ? options.focusOn : false
+
+    // for the mesh not to be loaded more than once during the processing
+    this._inProcess[id] = true
 
     MeshParser.parseFromUrl(url, format,
       // cbDone,
@@ -139,15 +161,11 @@ class MeshCollection extends EventManager {
         let geometry = info.geometry
         let mesh = new THREE.Mesh(geometry, material)
 
-        // let geometry = new THREE.SphereBufferGeometry( 10, 32, 32 );
-        // let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-        // let mesh = new THREE.Mesh( geometry, material );
-
         mesh.name = id
         mesh.visible = makeVisible
         that._collection[id] = mesh
         that._container.add(mesh)
-        // that._threeContext.getScene().add(mesh)
+        delete that._inProcess[id]
 
         if(focusOn){
           let lookatPos = geometry.boundingSphere.center
@@ -228,11 +246,23 @@ class MeshCollection extends EventManager {
   loadPointCloudFromUrl(url, options = {}){
     let that = this
     let id = 'id' in options ? options.id : Math.random().toString().split('.')[1]
+
+    if(id in this._inProcess){
+      return this.emit('onMeshLoadWarning', ['The mesh is already being processed.', id])
+    }
+
+    if(id in this._collection){
+      return this.emit('onMeshLoadWarning', ['The mesh is already loaded.', id])
+    }
+
     let makeVisible = 'makeVisible' in options ? options.makeVisible : true
     let color = 'color' in options ? options.color : '#FFFFFF'
     let format = 'format' in options ? options.format : 'raw'
     let focusOn = 'focusOn' in options ? options.focusOn : false
     let size = 'size' in options ? options.size : 100
+
+    // for the mesh not to be loaded more than once during the processing
+    this._inProcess[id] = true
 
     PointCloudParser.parseFromUrl(url, format,
       // cbDone,
@@ -249,6 +279,7 @@ class MeshCollection extends EventManager {
         particles.visible = makeVisible
         that._collection[id] = particles
         that._container.add(particles)
+        delete that._inProcess[id]
         // that._threeContext.getScene().add(particles)
 
         if(focusOn){

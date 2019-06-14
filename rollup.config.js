@@ -14,23 +14,23 @@ if(~packageName.indexOf('/')){
 }
 
 const configurations = [
-  // UMD
-  {
-    input: pkg.entry,
-    output: {
-      file: pkg.unpkg,
-      name: packageName,
-      sourcemap: true,
-      format: 'umd',
-    },
-    plugins: [
-      resolve(),
-      commonjs({ include: 'node_modules/**' }),
-      globals(),
-      builtins(),
-      webworkify({ pattern: '**/*.worker.js' }),
-    ],
-  },
+  // // UMD
+  // {
+  //   input: pkg.entry,
+  //   output: {
+  //     file: pkg.unpkg,
+  //     name: packageName,
+  //     sourcemap: true,
+  //     format: 'umd',
+  //   },
+  //   plugins: [
+  //     resolve(),
+  //     commonjs({ include: 'node_modules/**' }),
+  //     globals(),
+  //     builtins(),
+  //     webworkify({ pattern: '**/*.worker.js' }),
+  //   ],
+  // },
 
   // ESMODULE
   {

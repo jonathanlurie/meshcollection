@@ -1,6 +1,6 @@
 {
   "name": "meshcollection",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Manage a collection of meshes",
   "repository": "jonathanlurie/meshcollection",
   "main": "lib/meshcollection.js",
@@ -62,6 +62,7 @@
   },
   "dependencies": {
     "@jonathanlurie/eventmanager": "^0.1.0",
+    "axios": "^0.19.0",
     "three": "^0.104.0"
   }
 }

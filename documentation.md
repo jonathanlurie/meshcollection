@@ -14,6 +14,10 @@
         -   [Parameters][10]
     -   [detach][11]
         -   [Parameters][12]
+    -   [loadPointCloudFromUrl][13]
+        -   [Parameters][14]
+    -   [addPointCloud][15]
+        -   [Parameters][16]
 
 ## MeshCollection
 
@@ -27,12 +31,15 @@ Events expected:
 
 -   `threeContext`   (optional, default `null`)
 -   `mesh` **THREE.Mesh** mesh object
--   `id` **[string][13]** id of the mesh (as used within this collection)-   'onMeshLoadingProgress': when the loading status is updated. The callback arguments are:
--   `id` **[string][13]** id of the element that could not be loaded
--   `step` **[string][13]** name of the step being in progression (ie. 'parsing')
--   `progress` **[number][14]** percentage of progress on the 'step'-   'onMeshLoadError': whenever a mesh could not be loaded, for various reasons. Args of the callbac:
--   `error` **[Error][15]** the error explaining what was wrong
--   `id` **[string][13]** id of the element that could not be loaded
+-   `id` **[string][17]** id of the mesh (as used within this collection)-   'onMeshLoadingProgress': when the loading status is updated. The callback arguments are:
+-   `id` **[string][17]** id of the element that could not be loaded
+-   `step` **[string][17]** name of the step being in progression (ie. 'parsing')
+-   `progress` **[number][18]** percentage of progress on the 'step'-   'onMeshLoadError': whenever a mesh could not be loaded, for various reasons. Args of the callbac:
+-   `error` **[Error][19]** the error explaining what was wrong
+-   `id` **[string][17]** id of the element that could not be loaded-   'onMeshLoadWarning': when mesh is asked to be loaded but it's already being processed or in the loaded.
+         Note that this is based on the ID, not the URL
+-   `message` **[string][17]** the explanation
+-   `id` **[string][17]** ID of the mesh being loaded
 
 ### loadMeshFromUrl
 
@@ -40,13 +47,13 @@ Load a mesh file from a distant file, with the provided url.
 
 #### Parameters
 
--   `url` **[string][13]** the url to load the file from
--   `options` **[object][16]** the options object (optional, default `{}`)
-    -   `options.format` **[string][13]** must be one of: 'obj' (no others for the moment :D )
-    -   `options.id` **[string][13]** the id to attribute to the mesh once it will be part of the collection. Automatically generated if not provided
-    -   `options.makeVisible` **[boolean][17]** if true, the mesh will be added and made visible once loaded. If false, it's just going to be parsed and will have to be added later using its id (default: true)
-    -   `options.color` **[string][13]** the color to apply to the mesh in the format '#FFFFFF' (default: '#FFFFFF', does not apply if a material is given)
-    -   `options.focusOn` **[boolean][17]** once loaded, the camera will look at it
+-   `url` **[string][17]** the url to load the file from
+-   `options` **[object][20]** the options object (optional, default `{}`)
+    -   `options.format` **[string][17]** must be one of: 'obj' (no others for the moment :D )
+    -   `options.id` **[string][17]** the id to attribute to the mesh once it will be part of the collection. Automatically generated if not provided
+    -   `options.makeVisible` **[boolean][21]** if true, the mesh will be added and made visible once loaded. If false, it's just going to be parsed and will have to be added later using its id (default: true)
+    -   `options.color` **[string][17]** the color to apply to the mesh in the format '#FFFFFF' (default: '#FFFFFF', does not apply if a material is given)
+    -   `options.focusOn` **[boolean][21]** once loaded, the camera will look at it
     -   `options.material` **THREE.Material** the material to apply to this mesh (default: a generated Fresnel material)
 
 ### has
@@ -57,7 +64,7 @@ Is a mesh with such id in the collection?
 
 -   `id`  
 
-Returns **[boolean][17]** true if present in collection, false if not
+Returns **[boolean][21]** true if present in collection, false if not
 
 ### show
 
@@ -83,6 +90,30 @@ NOT WORKING FOR NOW
 
 -   `id`  
 
+### loadPointCloudFromUrl
+
+Load a mesh file from a distant file, with the provided url.
+
+#### Parameters
+
+-   `url` **[string][17]** the url to load the file from
+-   `options` **[object][20]** the options object (optional, default `{}`)
+    -   `options.size` **[number][18]** size of each point (default: 100, as the space unit is probably going to be micron)
+    -   `options.format` **[string][17]** must be one of: 'raw' (no others for the moment :D )
+    -   `options.id` **[string][17]** the id to attribute to the mesh once it will be part of the collection. Automatically generated if not provided
+    -   `options.makeVisible` **[boolean][21]** if true, the mesh will be added and made visible once loaded. If false, it's just going to be parsed and will have to be added later using its id (default: true)
+    -   `options.color` **[string][17]** the color to apply to the mesh in the format '#FFFFFF' (default: '#FFFFFF', does not apply if a material is given)
+    -   `options.focusOn` **[boolean][21]** once loaded, the camera will look at it
+
+### addPointCloud
+
+TEST
+
+#### Parameters
+
+-   `nbPoints`   (optional, default `1000`)
+-   `color`  
+
 [1]: #meshcollection
 
 [2]: #parameters
@@ -107,12 +138,20 @@ NOT WORKING FOR NOW
 
 [12]: #parameters-5
 
-[13]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[13]: #loadpointcloudfromurl
 
-[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[14]: #parameters-6
 
-[15]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error
+[15]: #addpointcloud
 
-[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+[16]: #parameters-7
 
-[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[18]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[19]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error
+
+[20]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+
+[21]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean

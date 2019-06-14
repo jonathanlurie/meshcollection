@@ -1,4 +1,6 @@
 import * as THREE from 'three'
+import axios from 'axios/dist/axios.js'
+
 // import RawPointsParserWorker from 'worker#./workers/RawPointsParser.worker.js'
 
 const POINT_FORMAT_LOOKUP = {
@@ -8,33 +10,31 @@ const POINT_FORMAT_LOOKUP = {
 class PointCloudParser {
 
   static parseRawFromUrl(url, cbDone, cbProgress){
-    fetch(url)
-      .then(function(response) {
-        if(response.ok === false){
-          throw new Error(`No file at ${url}`)
-        }
-        return response.blob()
-      })
-      .then(function(pointBlob){
-        return new Response(pointBlob).arrayBuffer()
-      })
-      .then(function(pointBuffer) {
-        console.time('points')
-        let geometry = new THREE.BufferGeometry()
-        geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( new Float32Array(pointBuffer), 3 ) )
-        console.timeEnd('points')
+    axios.get( url,
+    {
+      responseType: 'arraybuffer',
+      onDownloadProgress: function (progressEvent) {
+        cbProgress({
+          step: "download",
+          progress: progressEvent.loaded / progressEvent.total
+        })
+      }
+    })
+    .then(function(response) {
+      let geometry = new THREE.BufferGeometry()
+      geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( new Float32Array(response.data), 3 ) )
 
-        cbDone({
-          error: null,
-          geometry: geometry
-        })
+      cbDone({
+        error: null,
+        geometry: geometry
       })
-      .catch( e => {
-        cbDone({
-          error: e,
-          geometry: null
-        })
+    })
+    .catch( e => {
+      cbDone({
+        error: e,
+        geometry: null
       })
+    })
 
 
   }
