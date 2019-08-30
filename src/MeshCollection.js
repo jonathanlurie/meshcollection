@@ -52,7 +52,7 @@ class MeshCollection extends EventManager {
     // this._threeContext.getScene().add(torusKnot)
 
     // // DEBUG
-    // let axesHelper = new THREE.AxesHelper(100)
+    // let axesHelper = new THREE.AxesHelper(10000)
     // this._threeContext.getScene().add(axesHelper)
   }
 
@@ -242,6 +242,8 @@ class MeshCollection extends EventManager {
    * @param {boolean} options.makeVisible - if true, the mesh will be added and made visible once loaded. If false, it's just going to be parsed and will have to be added later using its id (default: true)
    * @param {string} options.color - the color to apply to the mesh in the format '#FFFFFF' (default: '#FFFFFF', does not apply if a material is given)
    * @param {boolean} options.focusOn - once loaded, the camera will look at it
+   * @param {string} options.blending - blending methods for points among: 'NoBlending', 'NormalBlending', 'AdditiveBlending', 'SubtractiveBlending', 'MultiplyBlending'  (default: 'NoBlending')
+   * @param {Number} options.alpha - transparency in [0, 1], 0 is entirely transparent and 1 is entirely opaque (default: 0.7)
    */
   loadPointCloudFromUrl(url, options = {}){
     let that = this
@@ -271,7 +273,7 @@ class MeshCollection extends EventManager {
           return that.emit('onMeshLoadError', [info.error, id])
         }
 
-        let material = that._generatePointCloudMaterial(color, size)
+        let material = that._generatePointCloudMaterial(color, size, options)
         let geometry = info.geometry
         let particles = new THREE.Points( geometry, material )
 
@@ -281,6 +283,8 @@ class MeshCollection extends EventManager {
         that._container.add(particles)
         delete that._inProcess[id]
         // that._threeContext.getScene().add(particles)
+
+        geometry.computeBoundingSphere()
 
         if(focusOn){
           let lookatPos = geometry.boundingSphere.center
@@ -354,7 +358,8 @@ class MeshCollection extends EventManager {
       void main() {
         vec2 uv = vec2( gl_PointCoord.x -0.5, 1.0 - gl_PointCoord.y-0.5 );
         float dFromCenter = sqrt(uv.x*uv.x + uv.y*uv.y);
-        float alpha = .7;
+        // float alpha = .7;
+        float alpha = 1.;
         float blurStart = 0.3;
 
         // without blurry edges
@@ -389,8 +394,8 @@ class MeshCollection extends EventManager {
       uniforms:       uniforms,
       vertexShader:   shader.vertex,
       fragmentShader: shader.fragment,
-      transparent:    true,
-      blending: THREE.AdditiveBlending,
+      // transparent:    true,
+      // blending: THREE.AdditiveBlending,
       //depthTest: false,
     });
 
@@ -401,7 +406,15 @@ class MeshCollection extends EventManager {
   }
 
 
-  _generatePointCloudMaterial(color='#FFFFFF', pointSize=100){
+  _generatePointCloudMaterial(color='#FFFFFF', pointSize=100, options={}){
+    let blending = 'blending' in options ? options.blending : 'NoBlending'
+    let alpha = 'alpha' in options ? options.alpha : 0.7
+    let alphaStr = alpha.toString()
+    // for make sure we privide a float to the shader
+    if(!~alphaStr.indexOf('.')){
+      alphaStr += '.0'
+    }
+
     let shader = {
       vertex: `
       uniform float size;
@@ -418,8 +431,8 @@ class MeshCollection extends EventManager {
       void main() {
         vec2 uv = vec2( gl_PointCoord.x -0.5, 1.0 - gl_PointCoord.y-0.5 );
         float dFromCenter = sqrt(uv.x*uv.x + uv.y*uv.y);
-        float alpha = .7;
-        float blurStart = 0.3;
+        float alpha = ${alphaStr};
+        // float blurStart = 0.3;
 
         // without blurry edges
         if(dFromCenter > 0.5){
@@ -453,8 +466,8 @@ class MeshCollection extends EventManager {
       uniforms:       uniforms,
       vertexShader:   shader.vertex,
       fragmentShader: shader.fragment,
-      transparent:    true,
-      blending: THREE.AdditiveBlending,
+      transparent:    alpha < 0.99,
+      blending: THREE[blending],// THREE.NoBlending ,//AdditiveBlending,
       //depthTest: false, // default: true
     })
 
