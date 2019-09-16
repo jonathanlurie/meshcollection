@@ -79,13 +79,13 @@ class MeshCollection extends EventManager {
     let fragmentShader = `
     #version 300 es
     precision highp float;
-    uniform vec3 glowColor;
+    uniform vec3 color;
     uniform float alpha;
     varying float intensity;
     out vec4 out_FragColor;
     void main()
     {
-      vec3 glow = glowColor * intensity;
+      vec3 glow = color * intensity;
       out_FragColor = vec4( glow, intensity * alpha);
     }
     `.trim()
@@ -95,7 +95,7 @@ class MeshCollection extends EventManager {
           c:   { type: "f", value: 1.0 },
           alpha:   { type: "f", value: 1.0 },
           p:   { type: "f", value: 1.4 },
-          glowColor: { type: "c", value: new THREE.Color(color) },
+          color: { type: "c", value: new THREE.Color(color) },
           viewVector: { type: "v3", value: this._threeContext.getCamera().position } // TODO: this should be removed after test
         },
         vertexShader: vertexShader,
@@ -229,7 +229,16 @@ class MeshCollection extends EventManager {
   }
 
 
-
+  /**
+   * Update the color of a mesh/pointcloud
+   * @param {string} id - the id of the mesh or pointcloud
+   * @param {string|number|object} color - a color, compatible with THREE js way of describing colors.
+   */
+  updateColor(id, color){
+    if(id in this._collection){
+      this._collection[id].material.uniforms.color.value = new THREE.Color(color)
+    }
+  }
 
 
   /**
@@ -305,6 +314,86 @@ class MeshCollection extends EventManager {
         that.emit('onMeshLoadingProgress', [id, info.step, info.progress])
       })
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * Load a mesh file from a distant file, with the provided url.
+     * @param {Float32Array} positions - the positions buffer as [xyzxyzxyz...]
+     * @param {object} options - the options object
+     * @param {number} options.size - size of each point (default: 100, as the space unit is probably going to be micron)
+     * @param {string} options.format - must be one of: 'raw' (no others for the moment :D )
+     * @param {string} options.id - the id to attribute to the mesh once it will be part of the collection. Automatically generated if not provided
+     * @param {boolean} options.makeVisible - if true, the mesh will be added and made visible once loaded. If false, it's just going to be parsed and will have to be added later using its id (default: true)
+     * @param {string} options.color - the color to apply to the mesh in the format '#FFFFFF' (default: '#FFFFFF', does not apply if a material is given)
+     * @param {boolean} options.focusOn - once loaded, the camera will look at it
+     * @param {string} options.blending - blending methods for points among: 'NoBlending', 'NormalBlending', 'AdditiveBlending', 'SubtractiveBlending', 'MultiplyBlending'  (default: 'NoBlending')
+     * @param {Number} options.alpha - transparency in [0, 1], 0 is entirely transparent and 1 is entirely opaque (default: 0.7)
+     */
+    loadPointCloudFromData(positions, options = {}){
+      let that = this
+      let id = 'id' in options ? options.id : Math.random().toString().split('.')[1]
+
+      if(id in this._inProcess){
+        return this.emit('onMeshLoadWarning', ['The mesh is already being processed.', id])
+      }
+
+      if(id in this._collection){
+        return this.emit('onMeshLoadWarning', ['The mesh is already loaded.', id])
+      }
+
+      let makeVisible = 'makeVisible' in options ? options.makeVisible : true
+      let color = 'color' in options ? options.color : '#FFFFFF'
+      let format = 'format' in options ? options.format : 'raw'
+      let focusOn = 'focusOn' in options ? options.focusOn : false
+      let size = 'size' in options ? options.size : 100
+
+      // for the mesh not to be loaded more than once during the processing
+      this._inProcess[id] = true
+
+      let geometry = new THREE.BufferGeometry()
+      geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) )
+
+      let material = that._generatePointCloudMaterial(color, size, options)
+      let particles = new THREE.Points( geometry, material )
+
+      particles.name = id
+      particles.visible = makeVisible
+      that._collection[id] = particles
+      that._container.add(particles)
+      delete that._inProcess[id]
+      // that._threeContext.getScene().add(particles)
+
+      geometry.computeBoundingSphere()
+
+      if(focusOn){
+        let lookatPos = geometry.boundingSphere.center
+        that._threeContext.getCamera().position.set(lookatPos.x + geometry.boundingSphere.radius * 4, lookatPos.y, lookatPos.z)
+        that._threeContext.lookAt(geometry.boundingSphere.center)
+      }
+
+
+      that.emit('onMeshLoaded', [particles, id])
+
+      // DEBUG
+      // let axesHelper = new THREE.AxesHelper(100)
+      // // axesHelper.position.set(geometry.boundingSphere.center.x, geometry.boundingSphere.center.y, geometry.boundingSphere.center.z)
+      // that._threeContext.getScene().add(axesHelper)
+
+
+    }
+
 
 
 
@@ -473,6 +562,9 @@ class MeshCollection extends EventManager {
 
     return material
   }
+
+
+
 
 
 }
