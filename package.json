@@ -63,6 +63,6 @@
   "dependencies": {
     "@jonathanlurie/eventmanager": "^0.1.0",
     "axios": "^0.19.0",
-    "three": "^0.104.0"
+    "three": "^0.137.0"
   }
 }
