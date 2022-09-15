@@ -20,7 +20,7 @@
     "threecontext": "^0.1.0"
   },
   "devDependencies": {
-    "documentation": "^8.1.2",
+    "documentation": "^14.0.0",
     "eslint": "^5.6.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0",
